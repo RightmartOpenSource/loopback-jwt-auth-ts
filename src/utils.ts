@@ -1,4 +1,4 @@
-export async function saveUpsertWithWhere(model, where, data, options?) {
+export async function saveUpsertWithWhere(model: any, where: any , data: any , options?: any) {
 
     if (where.where) {
         throw new Error("where.where as argument is not allowed");

@@ -3,6 +3,7 @@ import * as lodash from "lodash";
 import * as uuid from "uuid/v4";
 import {saveUpsertWithWhere} from "./utils";
 import * as debug from "debug";
+import UnauthorizedError from "./UnauthorizedError";
 
 
 interface Role {
@@ -13,7 +14,8 @@ interface Role {
 interface User {
     id?: string,
     email: string
-    password: string
+    password: string,
+    jwtToken: string
 }
 interface Token {
     id: string,
@@ -41,6 +43,11 @@ export default class JWTAuthMiddleware {
 
     private static createRandomPassword(){
         return uuid();
+    }
+
+    private static hasTokenChanged(jwtToken: string, user: User){
+
+        return user.jwtToken != jwtToken
     }
 
 
@@ -71,6 +78,10 @@ export default class JWTAuthMiddleware {
     private async auth(req): Promise<void>{
 
         const jwtToken = await this.getToken(req);
+
+        if(!jwtToken){
+            new UnauthorizedError("Can't find jwt in request");
+        }
         this.logger("Got token from request", jwtToken);
 
         try {
@@ -97,7 +108,7 @@ export default class JWTAuthMiddleware {
 
         this.logger("Created or updated User", user);
 
-        if(userRoles){
+        if(userRoles && JWTAuthMiddleware.hasTokenChanged(jwtToken, user) ){
             this.logger("Updated roles ", userRoles);
             const roles = await this.ensureRolesExists(userRoles);
             await this.updateRoleMapping(user, roles);
@@ -112,6 +123,7 @@ export default class JWTAuthMiddleware {
         this.logger("Roles: ", await this.role.find({}));
         this.logger("users: ", await this.user.find({}));
 
+        await this.user.updateAll({id: user.id}, {jwtToken});
         req.user = user;
         req.accessToken = token;
 

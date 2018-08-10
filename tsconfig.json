@@ -1,17 +1,18 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
-    "types": ["@types/lodash"],
-    "baseUrl": "./src",
-    "paths": {
-      "*": [
-        "/*",
-        "/adapaters/*"
-      ]
-    },
-    "target": "es5",
-    "lib": [
-      "es2016"
-    ]
-  }
+    "module": "commonjs",
+    "target": "ES2017",
+    "noImplicitAny": false,
+    "removeComments": true,
+    "outDir": "dist",
+    "declaration": true,
+    "preserveConstEnums": true,
+    "sourceMap": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "**/*.spec.ts",
+  ]
 }

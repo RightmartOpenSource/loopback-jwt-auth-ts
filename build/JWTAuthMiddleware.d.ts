@@ -2,6 +2,7 @@ interface User {
     id?: string;
     email: string;
     password: string;
+    jwtToken: string;
 }
 interface Token {
     id: string;
@@ -27,6 +28,7 @@ interface JWTAuthMiddelwareOptions {
 }
 export default class JWTAuthMiddleware {
     private static createRandomPassword;
+    private static hasTokenChanged;
     role: Model<any>;
     roleMapping: Model<any>;
     user: Model<User>;
