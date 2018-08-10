@@ -138,8 +138,9 @@ export default class JWTAuthMiddleware {
     }
     private async updateRoleMapping(user: User, newRoles: string[]){
         await this.roleMapping.destroyAll({principalId: user.id});
-        await Promise.all(newRoles.map(async () => {
+        await Promise.all(newRoles.map(async (roleName) => {
             const data = {
+                roleId: roleName,
                 principalType: this.roleMapping['USER'],
                 principalId: user.id
             };
@@ -153,7 +154,11 @@ export default class JWTAuthMiddleware {
     private ensureRolesExists(roles: string[]){
         return Promise.all(roles.map(async (role: string)=> {
             this.logger("Update role ", role);
-            return await saveUpsertWithWhere(this.role, {name: role}, {name: role})
+            const data = {
+                name: role,
+                id: role,
+            };
+            return await saveUpsertWithWhere(this.role, data, data)
         }))
     }
     public process(req, res, next: (err? : Error) => any) {

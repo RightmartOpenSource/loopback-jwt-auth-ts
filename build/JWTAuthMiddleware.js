@@ -168,12 +168,13 @@ var JWTAuthMiddleware = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.roleMapping.destroyAll({ principalId: user.id })];
                     case 1:
                         _a.sent();
-                        return [4 /*yield*/, Promise.all(newRoles.map(function () { return __awaiter(_this, void 0, void 0, function () {
+                        return [4 /*yield*/, Promise.all(newRoles.map(function (roleName) { return __awaiter(_this, void 0, void 0, function () {
                                 var data;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
                                             data = {
+                                                roleId: roleName,
                                                 principalType: this.roleMapping['USER'],
                                                 principalId: user.id
                                             };
@@ -195,11 +196,16 @@ var JWTAuthMiddleware = /** @class */ (function () {
     JWTAuthMiddleware.prototype.ensureRolesExists = function (roles) {
         var _this = this;
         return Promise.all(roles.map(function (role) { return __awaiter(_this, void 0, void 0, function () {
+            var data;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
                         this.logger("Update role ", role);
-                        return [4 /*yield*/, utils_1.saveUpsertWithWhere(this.role, { name: role }, { name: role })];
+                        data = {
+                            name: role,
+                            id: role,
+                        };
+                        return [4 /*yield*/, utils_1.saveUpsertWithWhere(this.role, data, data)];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
