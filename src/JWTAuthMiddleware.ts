@@ -165,8 +165,7 @@ export default class JWTAuthMiddleware {
         return Promise.all(roles.map(async (role: string)=> {
             this.logger("Update role ", role);
             const data = {
-                name: role,
-                id: role,
+                name: role
             };
             return await saveUpsertWithWhere(this.role, data, data)
         }))

@@ -218,8 +218,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
                     case 0:
                         this.logger("Update role ", role);
                         data = {
-                            name: role,
-                            id: role,
+                            name: role
                         };
                         return [4 /*yield*/, utils_1.saveUpsertWithWhere(this.role, data, data)];
                     case 1: return [2 /*return*/, _a.sent()];
