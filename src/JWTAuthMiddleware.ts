@@ -75,8 +75,7 @@ export default class JWTAuthMiddleware {
             throw e;
         }
 
-
-        const payload = jwt.getToken(jwtToken);
+        const payload = jwt.decode(jwtToken);
 
         this.logger("Token is valid and got payload ", payload);
 

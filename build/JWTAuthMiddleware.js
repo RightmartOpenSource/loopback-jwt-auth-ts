@@ -76,7 +76,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
                         e_1 = _b.sent();
                         throw e_1;
                     case 5:
-                        payload = jwt.getToken(jwtToken);
+                        payload = jwt.decode(jwtToken);
                         this.logger("Token is valid and got payload ", payload);
                         userEmail = lodash.get(payload, this.emailIdentifier, null);
                         userRoles = lodash.get(payload, this.roleIdentifier, null);
