@@ -217,7 +217,7 @@ export default class JWTAuthMiddleware {
     }
     public process(req, res, next: (err? : Error) => any) {
 
-        this.auth(req)
+        this.authAvoidParallel(req)
         .then(() => next())
         .catch(next)
 
