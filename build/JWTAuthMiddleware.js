@@ -102,8 +102,9 @@ var JWTAuthMiddleware = /** @class */ (function () {
                         return [4 /*yield*/, this.loginUser(user, password, payload)];
                     case 10:
                         token = _b.sent();
+                        this.logger("Got access token ", token);
                         req.user = user;
-                        req.access_token = token;
+                        req.accessToken = token;
                         return [2 /*return*/];
                 }
             });
