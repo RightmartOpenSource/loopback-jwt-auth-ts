@@ -162,15 +162,11 @@ var JWTAuthMiddleware = /** @class */ (function () {
     };
     JWTAuthMiddleware.prototype.updateRoleMapping = function (user, newRoles) {
         return __awaiter(this, void 0, void 0, function () {
-            var currentRoles;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.roleMapping.find({ userId: user.id })];
+                    case 0: return [4 /*yield*/, this.roleMapping.destroyAll({ principalId: user.id })];
                     case 1:
-                        currentRoles = _a.sent();
-                        return [4 /*yield*/, this.roleMapping.destroyAll({ userId: user.id })];
-                    case 2:
                         _a.sent();
                         return [4 /*yield*/, Promise.all(newRoles.map(function () { return __awaiter(_this, void 0, void 0, function () {
                                 var data;
@@ -181,6 +177,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
                                                 principalType: this.roleMapping['USER'],
                                                 principalId: user.id
                                             };
+                                            this.logger("Update role mapping ", data);
                                             return [4 /*yield*/, utils_1.saveUpsertWithWhere(this.roleMapping, data, data)];
                                         case 1:
                                             _a.sent();
@@ -188,7 +185,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
                                     }
                                 });
                             }); }))];
-                    case 3:
+                    case 2:
                         _a.sent();
                         return [2 /*return*/];
                 }
@@ -200,7 +197,9 @@ var JWTAuthMiddleware = /** @class */ (function () {
         return Promise.all(roles.map(function (role) { return __awaiter(_this, void 0, void 0, function () {
             return __generator(this, function (_a) {
                 switch (_a.label) {
-                    case 0: return [4 /*yield*/, utils_1.saveUpsertWithWhere(this.role, { name: role }, { name: role })];
+                    case 0:
+                        this.logger("Update role ", role);
+                        return [4 /*yield*/, utils_1.saveUpsertWithWhere(this.role, { name: role }, { name: role })];
                     case 1: return [2 /*return*/, _a.sent()];
                 }
             });
