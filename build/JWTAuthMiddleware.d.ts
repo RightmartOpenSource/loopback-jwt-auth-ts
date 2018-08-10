@@ -2,7 +2,7 @@ interface User {
     id?: string;
     email: string;
     password: string;
-    jwtToken: string;
+    jwtTokenHash: string;
 }
 interface Token {
     id: string;
@@ -25,10 +25,12 @@ interface JWTAuthMiddelwareOptions {
     roleMappingModel: Model<any> | any;
     accessToken: Model<Token> | any;
     logger?: (...args: any[]) => void;
+    passwordSecret: string;
 }
 export default class JWTAuthMiddleware {
     private static createRandomPassword;
     private static hasTokenChanged;
+    private static getHashedToken;
     role: Model<any>;
     roleMapping: Model<any>;
     user: Model<User>;
@@ -38,6 +40,7 @@ export default class JWTAuthMiddleware {
     beforeUserCreate: (newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string;
     roleIdentifier: string;
+    passwordSecret: string;
     logger: (...args: any[]) => void;
     constructor(options: JWTAuthMiddelwareOptions);
     private auth;

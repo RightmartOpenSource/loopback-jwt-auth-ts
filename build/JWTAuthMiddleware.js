@@ -2,10 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const jwt = require("jsonwebtoken");
 const lodash = require("lodash");
-const uuid = require("uuid/v4");
 const utils_1 = require("./utils");
 const debug = require("debug");
 const UnauthorizedError_1 = require("./UnauthorizedError");
+const sha2_1 = require("sha2");
 class JWTAuthMiddleware {
     constructor(options) {
         this.emailIdentifier = "email";
@@ -17,13 +17,17 @@ class JWTAuthMiddleware {
         this.roleMapping = options.roleMappingModel;
         this.user = options.userModel;
         this.accessToken = options.accessToken;
+        this.passwordSecret = options.passwordSecret;
         this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware");
     }
-    static createRandomPassword() {
-        return uuid();
+    static createRandomPassword(email) {
+        return sha2_1.SHA256(email);
     }
     static hasTokenChanged(jwtToken, user) {
-        return user.jwtToken != jwtToken;
+        return sha2_1.SHA256(jwtToken) != user.jwtTokenHash;
+    }
+    static getHashedToken(jwtToken) {
+        return sha2_1.SHA256(jwtToken);
     }
     async auth(req) {
         const jwtToken = await this.getToken(req);
@@ -53,12 +57,16 @@ class JWTAuthMiddleware {
             const roles = await this.ensureRolesExists(userRoles);
             await this.updateRoleMapping(user, roles);
         }
+        else {
+            this.logger("Skipping role update because nothing changed", user.email);
+        }
         this.logger("Login and get Token");
         const token = await this.loginUser(user, password, payload);
         this.logger("Got access token ", token);
         this.logger("Role mappings: ", await this.roleMapping.find({}));
         this.logger("Roles: ", await this.role.find({}));
         this.logger("users: ", await this.user.find({}));
+        await this.user.updateAll({ id: user.id }, { jwtTokenHash: JWTAuthMiddleware.getHashedToken(jwtToken) });
         req.user = user;
         req.accessToken = token;
     }
@@ -74,7 +82,7 @@ class JWTAuthMiddleware {
         return await this.accessToken.findById(token.id);
     }
     async getOrCreateUser(email, jwtPayload) {
-        const password = JWTAuthMiddleware.createRandomPassword();
+        const password = this.passwordSecret;
         let newUser = {
             email,
             password

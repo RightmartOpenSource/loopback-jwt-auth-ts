@@ -14,7 +14,7 @@
     "init": "^0.1.2",
     "jsonwebtoken": "^8.3.0",
     "lodash": "^4.17.10",
-    "uuid": "^3.3.2"
+    "sha2": "^1.0.2"
   },
   "devDependencies": {
     "@types/debug": "0.0.30",

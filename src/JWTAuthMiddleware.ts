@@ -1,10 +1,9 @@
 import * as jwt from "jsonwebtoken";
 import * as lodash from "lodash";
-import * as uuid from "uuid/v4";
 import {saveUpsertWithWhere} from "./utils";
 import * as debug from "debug";
 import UnauthorizedError from "./UnauthorizedError";
-
+import {SHA256} from "sha2"
 
 interface Role {
     id: string,
@@ -15,7 +14,7 @@ interface User {
     id?: string,
     email: string
     password: string,
-    jwtToken: string
+    jwtTokenHash: string
 }
 interface Token {
     id: string,
@@ -38,16 +37,21 @@ interface JWTAuthMiddelwareOptions{
     roleMappingModel: Model<any> | any
     accessToken: Model<Token> | any;
     logger?: (...args)=> void
+    passwordSecret: string;
 }
 export default class JWTAuthMiddleware {
 
-    private static createRandomPassword(){
-        return uuid();
+    private static createRandomPassword(email){
+        return SHA256(email);
     }
 
     private static hasTokenChanged(jwtToken: string, user: User){
 
-        return user.jwtToken != jwtToken
+        return  SHA256(jwtToken)!= user.jwtTokenHash
+    }
+
+    private static getHashedToken(jwtToken: string){
+        return SHA256(jwtToken)
     }
 
 
@@ -60,6 +64,7 @@ export default class JWTAuthMiddleware {
     beforeUserCreate:(newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string = "email";
     roleIdentifier: string = "roles";
+    passwordSecret: string;
     logger: (...args)=> void
 
 
@@ -72,6 +77,7 @@ export default class JWTAuthMiddleware {
         this.roleMapping = options.roleMappingModel;
         this.user = options.userModel;
         this.accessToken = options.accessToken;
+        this.passwordSecret = options.passwordSecret;
         this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware")
     }
 
@@ -112,6 +118,8 @@ export default class JWTAuthMiddleware {
             this.logger("Updated roles ", userRoles);
             const roles = await this.ensureRolesExists(userRoles);
             await this.updateRoleMapping(user, roles);
+        }else {
+            this.logger("Skipping role update because nothing changed", user.email);
         }
 
         this.logger("Login and get Token");
@@ -123,11 +131,15 @@ export default class JWTAuthMiddleware {
         this.logger("Roles: ", await this.role.find({}));
         this.logger("users: ", await this.user.find({}));
 
-        // await this.user.updateAll({id: user.id}, {jwtToken});
+        // save hash of token to skip role update next time
+        await this.user.updateAll({id: user.id}, {jwtTokenHash: JWTAuthMiddleware.getHashedToken(jwtToken)});
+
         req.user = user;
         req.accessToken = token;
 
     }
+
+
 
     private async loginUser(user: User, password: string, jwtPayload: any): Promise<Token>{
         let now = Math.round(Date.now().valueOf()/1000);
@@ -144,7 +156,7 @@ export default class JWTAuthMiddleware {
 
     private async getOrCreateUser(email, jwtPayload: any): Promise<{user: User, password: string}>{
 
-        const password = JWTAuthMiddleware.createRandomPassword();
+        const password = this.passwordSecret;
         let newUser = {
             email,
             password
