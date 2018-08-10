@@ -101,9 +101,10 @@ export default class JWTAuthMiddleware {
         this.logger("Login and get Token");
         const token = await this.loginUser(user,password,payload);
 
+        this.logger("Got access token ", token);
 
         req.user = user;
-        req.access_token = token;
+        req.accessToken = token;
 
     }
 
