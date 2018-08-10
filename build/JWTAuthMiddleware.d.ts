@@ -23,6 +23,7 @@ interface JWTAuthMiddelwareOptions {
     roleModel: Model<any> | any;
     roleMappingModel: Model<any> | any;
     accessToken: Model<Token> | any;
+    logger?: (...args: any[]) => void;
 }
 export default class JWTAuthMiddleware {
     private static createRandomPassword;
@@ -35,6 +36,7 @@ export default class JWTAuthMiddleware {
     beforeUserCreate: (newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string;
     roleIdentifier: string;
+    logger: (...args: any[]) => void;
     constructor(options: JWTAuthMiddelwareOptions);
     private auth;
     private loginUser;

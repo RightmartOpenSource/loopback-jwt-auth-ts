@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "debug": "^3.1.0",
     "git": "^0.1.5",
     "init": "^0.1.2",
     "jsonwebtoken": "^8.3.0",
@@ -16,6 +17,7 @@
     "uuid": "^3.3.2"
   },
   "devDependencies": {
+    "@types/debug": "0.0.30",
     "@types/lodash": "^4.14.116",
     "mocha": "^5.2.0",
     "typescript": "^3.0.1"

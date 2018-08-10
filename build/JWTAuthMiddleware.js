@@ -39,6 +39,7 @@ var jwt = require("jsonwebtoken");
 var lodash = require("lodash");
 var uuid = require("uuid/v4");
 var utils_1 = require("./utils");
+var debug = require("debug");
 var JWTAuthMiddleware = /** @class */ (function () {
     function JWTAuthMiddleware(options) {
         this.emailIdentifier = "email";
@@ -50,6 +51,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
         this.roleMapping = options.roleMappingModel;
         this.user = options.userModel;
         this.accessToken = options.accessToken;
+        this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware");
     }
     JWTAuthMiddleware.createRandomPassword = function () {
         return uuid();
@@ -62,6 +64,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.getToken(req)];
                     case 1:
                         jwtToken = _b.sent();
+                        this.logger("Got token from request", jwtToken);
                         _b.label = 2;
                     case 2:
                         _b.trys.push([2, 4, , 5]);
@@ -71,18 +74,22 @@ var JWTAuthMiddleware = /** @class */ (function () {
                         return [3 /*break*/, 5];
                     case 4:
                         e_1 = _b.sent();
-                        throw new Error("Invalid jwt");
+                        throw e_1;
                     case 5:
                         payload = jwt.getToken(jwtToken);
+                        this.logger("Token is valid and got payload ", payload);
                         userEmail = lodash.get(payload, this.emailIdentifier, null);
                         userRoles = lodash.get(payload, this.roleIdentifier, null);
+                        this.logger("Email and roles are: ", userEmail, userRoles);
                         if (!userEmail) {
                             throw new Error("JWT invalid format " + this.emailIdentifier + " \n            is required in payload but was " + JSON.stringify(payload));
                         }
                         return [4 /*yield*/, this.getOrCreateUser(userEmail, payload)];
                     case 6:
                         _a = _b.sent(), user = _a.user, password = _a.password;
+                        this.logger("Created or updated User", user);
                         if (!userRoles) return [3 /*break*/, 9];
+                        this.logger("Updated roles ", userRoles);
                         return [4 /*yield*/, this.ensureRolesExists(userRoles)];
                     case 7:
                         _b.sent();
@@ -90,7 +97,9 @@ var JWTAuthMiddleware = /** @class */ (function () {
                     case 8:
                         _b.sent();
                         _b.label = 9;
-                    case 9: return [4 /*yield*/, this.loginUser(user, password, payload)];
+                    case 9:
+                        this.logger("Login and get Token");
+                        return [4 /*yield*/, this.loginUser(user, password, payload)];
                     case 10:
                         token = _b.sent();
                         req.user = user;

@@ -2,6 +2,8 @@ import * as jwt from "jsonwebtoken";
 import * as lodash from "lodash";
 import * as uuid from "uuid/v4";
 import {saveUpsertWithWhere} from "./utils";
+import * as debug from "debug";
+
 
 interface User {
     id?: string,
@@ -28,6 +30,7 @@ interface JWTAuthMiddelwareOptions{
     roleModel: Model<any> | any
     roleMappingModel: Model<any> | any
     accessToken: Model<Token> | any;
+    logger?: (...args)=> void
 }
 export default class JWTAuthMiddleware {
 
@@ -45,6 +48,8 @@ export default class JWTAuthMiddleware {
     beforeUserCreate:(newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string = "email";
     roleIdentifier: string = "roles";
+    logger: (...args)=> void
+
 
     constructor(options:JWTAuthMiddelwareOptions ){
 
@@ -55,24 +60,30 @@ export default class JWTAuthMiddleware {
         this.roleMapping = options.roleMappingModel;
         this.user = options.userModel;
         this.accessToken = options.accessToken;
+        this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware")
     }
 
     private async auth(req): Promise<void>{
 
         const jwtToken = await this.getToken(req);
+        this.logger("Got token from request", jwtToken);
 
         try {
             await this.verify(jwtToken);
 
         }catch (e) {
-            throw new Error("Invalid jwt");
+            throw e;
         }
 
 
         const payload = jwt.getToken(jwtToken);
 
+        this.logger("Token is valid and got payload ", payload);
+
         const userEmail = lodash.get(payload, this.emailIdentifier, null) as string;
         const userRoles = lodash.get(payload, this.roleIdentifier, null) as string[];
+
+        this.logger("Email and roles are: ", userEmail, userRoles);
 
         if(!userEmail){
             throw new Error(`JWT invalid format ${this.emailIdentifier} 
@@ -80,11 +91,15 @@ export default class JWTAuthMiddleware {
         }
         const { user, password }= await this.getOrCreateUser(userEmail, payload);
 
+        this.logger("Created or updated User", user);
+
         if(userRoles){
+            this.logger("Updated roles ", userRoles);
             await this.ensureRolesExists(userRoles);
             await this.updateRoleMapping(user, userRoles);
         }
 
+        this.logger("Login and get Token");
         const token = await this.loginUser(user,password,payload);
 
 
