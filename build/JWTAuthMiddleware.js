@@ -59,7 +59,6 @@ class JWTAuthMiddleware {
         this.logger("Role mappings: ", await this.roleMapping.find({}));
         this.logger("Roles: ", await this.role.find({}));
         this.logger("users: ", await this.user.find({}));
-        await this.user.updateAll({ id: user.id }, { jwtToken });
         req.user = user;
         req.accessToken = token;
     }

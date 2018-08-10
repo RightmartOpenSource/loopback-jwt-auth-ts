@@ -123,7 +123,7 @@ export default class JWTAuthMiddleware {
         this.logger("Roles: ", await this.role.find({}));
         this.logger("users: ", await this.user.find({}));
 
-        await this.user.updateAll({id: user.id}, {jwtToken});
+        // await this.user.updateAll({id: user.id}, {jwtToken});
         req.user = user;
         req.accessToken = token;
 
