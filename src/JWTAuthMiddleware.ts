@@ -2,7 +2,6 @@ import * as jwt from "jsonwebtoken";
 import * as lodash from "lodash";
 import * as uuid from "uuid/v4";
 import {saveUpsertWithWhere} from "./utils";
-import * as crypto from "crypto";
 
 interface User {
     id: string,
@@ -29,10 +28,10 @@ interface JWTAuthMiddelwareOptions{
     roleMappingModel: Model<any>
     accessToken: Model<Token>;
 }
-export default class JWTAuthMiddelware {
+export default class JWTAuthMiddleware {
 
     private static createRandomPassword(){
-        return crypto.createHash('md5').update(uuid()).digest('hex');
+        return uuid();
     }
 
 
@@ -106,7 +105,7 @@ export default class JWTAuthMiddelware {
 
     private async getOrCreateUser(email): Promise<{user: User, password: string}>{
 
-        const password = JWTAuthMiddelware.createRandomPassword();
+        const password = JWTAuthMiddleware.createRandomPassword();
         let newUser = {
             email,
             password
@@ -142,7 +141,7 @@ export default class JWTAuthMiddelware {
     public process(req, res, next: (err? : Error) => any) {
 
         this.auth(req)
-        .then(next)
+        .then(() => next())
         .catch(next)
 
     }
