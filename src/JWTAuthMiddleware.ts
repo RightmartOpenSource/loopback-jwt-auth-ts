@@ -80,7 +80,7 @@ export default class JWTAuthMiddleware {
         const jwtToken = await this.getToken(req);
 
         if(typeof jwtToken !== "string"){
-            new UnauthorizedError("Can't find jwt in request");
+            throw new UnauthorizedError("Can't find jwt in request");
         }
         this.logger("Got token from request", jwtToken);
 

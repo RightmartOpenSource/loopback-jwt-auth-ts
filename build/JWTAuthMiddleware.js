@@ -28,7 +28,7 @@ class JWTAuthMiddleware {
     async auth(req) {
         const jwtToken = await this.getToken(req);
         if (typeof jwtToken !== "string") {
-            new UnauthorizedError_1.default("Can't find jwt in request");
+            throw new UnauthorizedError_1.default("Can't find jwt in request");
         }
         this.logger("Got token from request", jwtToken);
         try {
