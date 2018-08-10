@@ -5,6 +5,11 @@ import {saveUpsertWithWhere} from "./utils";
 import * as debug from "debug";
 
 
+interface Role {
+    id: string,
+    name: string
+}
+
 interface User {
     id?: string,
     email: string
@@ -94,8 +99,8 @@ export default class JWTAuthMiddleware {
 
         if(userRoles){
             this.logger("Updated roles ", userRoles);
-            await this.ensureRolesExists(userRoles);
-            await this.updateRoleMapping(user, userRoles);
+            const roles = await this.ensureRolesExists(userRoles);
+            await this.updateRoleMapping(user, roles);
         }
 
         this.logger("Login and get Token");
@@ -141,11 +146,11 @@ export default class JWTAuthMiddleware {
         }
 
     }
-    private async updateRoleMapping(user: User, newRoles: string[]){
+    private async updateRoleMapping(user: User, newRoles: Role[]){
         await this.roleMapping.destroyAll({principalId: user.id});
-        await Promise.all(newRoles.map(async (roleName) => {
+        await Promise.all(newRoles.map(async (role) => {
             const data = {
-                roleId: roleName,
+                roleId: role.id,
                 principalType: this.roleMapping['USER'],
                 principalId: user.id
             };
@@ -156,7 +161,7 @@ export default class JWTAuthMiddleware {
 
     }
 
-    private ensureRolesExists(roles: string[]){
+    private ensureRolesExists(roles: string[]) : Promise<Role[]>{
         return Promise.all(roles.map(async (role: string)=> {
             this.logger("Update role ", role);
             const data = {

@@ -58,7 +58,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
     };
     JWTAuthMiddleware.prototype.auth = function (req) {
         return __awaiter(this, void 0, void 0, function () {
-            var jwtToken, e_1, payload, userEmail, userRoles, _a, user, password, token, _b, _c, _d, _e, _f, _g;
+            var jwtToken, e_1, payload, userEmail, userRoles, _a, user, password, roles, token, _b, _c, _d, _e, _f, _g;
             return __generator(this, function (_h) {
                 switch (_h.label) {
                     case 0: return [4 /*yield*/, this.getToken(req)];
@@ -92,8 +92,8 @@ var JWTAuthMiddleware = /** @class */ (function () {
                         this.logger("Updated roles ", userRoles);
                         return [4 /*yield*/, this.ensureRolesExists(userRoles)];
                     case 7:
-                        _h.sent();
-                        return [4 /*yield*/, this.updateRoleMapping(user, userRoles)];
+                        roles = _h.sent();
+                        return [4 /*yield*/, this.updateRoleMapping(user, roles)];
                     case 8:
                         _h.sent();
                         _h.label = 9;
@@ -184,13 +184,13 @@ var JWTAuthMiddleware = /** @class */ (function () {
                     case 0: return [4 /*yield*/, this.roleMapping.destroyAll({ principalId: user.id })];
                     case 1:
                         _a.sent();
-                        return [4 /*yield*/, Promise.all(newRoles.map(function (roleName) { return __awaiter(_this, void 0, void 0, function () {
+                        return [4 /*yield*/, Promise.all(newRoles.map(function (role) { return __awaiter(_this, void 0, void 0, function () {
                                 var data;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
                                             data = {
-                                                roleId: roleName,
+                                                roleId: role.id,
                                                 principalType: this.roleMapping['USER'],
                                                 principalId: user.id
                                             };
