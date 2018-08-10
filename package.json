@@ -2,7 +2,7 @@
   "name": "loopback-jwt-auth-ts",
   "version": "1.0.0",
   "description": "",
-  "main": "src/index.ts",
+  "main": "build/index.ts",
   "scripts": {
     "build": "rm -r -f ./build && ./node_modules/.bin/tsc --declaration true --outDir ./build "
   },
