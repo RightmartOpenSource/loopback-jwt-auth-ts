@@ -1,0 +1,22 @@
+{
+  "name": "loopback-jwt-auth-ts",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "git": "^0.1.5",
+    "init": "^0.1.2",
+    "jsonwebtoken": "^8.3.0",
+    "lodash": "^4.17.10",
+    "uuid": "^3.3.2"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.116",
+    "mocha": "^5.2.0"
+  }
+}

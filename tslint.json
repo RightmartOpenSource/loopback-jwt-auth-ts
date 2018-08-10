@@ -1,0 +1,29 @@
+{
+    "defaultSeverity": "error",
+    "extends": [
+        "tslint:recommended"
+    ],
+    "jsRules": {
+        "no-console": false,
+        "object-literal-sort-keys": [false,  "match-declaration-order"]
+    },
+    "rules": {
+        "no-empty-interface": false,
+        "interface-name": false,
+        "variable-name": [true,
+            "check-format",
+            "allow-leading-underscore"
+        ],
+        "object-literal-sort-keys": [false,  "match-declaration-order"],
+        "max-classes-per-file": false,
+        "no-console": false,
+        "ordered-imports": [
+            false,
+            {
+                "import-sources-order": "lowercase-last",
+                "named-imports-order": "lowercase-first"
+            }
+        ]
+    },
+    "rulesDirectory": []
+}
