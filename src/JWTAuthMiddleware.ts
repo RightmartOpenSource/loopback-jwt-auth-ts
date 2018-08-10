@@ -65,7 +65,8 @@ export default class JWTAuthMiddleware {
     emailIdentifier: string = "email";
     roleIdentifier: string = "roles";
     passwordSecret: string;
-    logger: (...args)=> void
+    logger: (...args)=> void;
+    pending: Map<string, Promise<{user: User, token: Token}>>;
 
 
     constructor(options:JWTAuthMiddelwareOptions ){
@@ -79,9 +80,27 @@ export default class JWTAuthMiddleware {
         this.accessToken = options.accessToken;
         this.passwordSecret = options.passwordSecret;
         this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware")
+        this.pending = new Map();
     }
 
-    private async auth(req): Promise<void>{
+    async authAvoidParallel(req){
+        const jwtToken = await this.getToken(req);
+        if(!this.pending.has(jwtToken)){
+            this.logger("New auth request ");
+            this.pending.set(jwtToken, this.auth(req));
+        }else {
+            this.logger("use existing request")
+        }
+        const pendingRequest = this.pending.get(jwtToken);
+        pendingRequest
+            .catch(()=> this.pending.delete(jwtToken))
+            .then(()=> this.pending.delete(jwtToken));
+        const {user, token} = await pendingRequest;
+        req.user = user;
+        req.accessToken = token;
+    }
+
+    private async auth(req): Promise<{user: User, token: Token}>{
 
         const jwtToken = await this.getToken(req);
 
@@ -134,8 +153,10 @@ export default class JWTAuthMiddleware {
         // save hash of token to skip role update next time
         await this.user.updateAll({id: user.id}, {jwtTokenHash: JWTAuthMiddleware.getHashedToken(jwtToken)});
 
-        req.user = user;
-        req.accessToken = token;
+        return {
+            user,
+            token
+        };
 
     }
 

@@ -19,6 +19,7 @@ class JWTAuthMiddleware {
         this.accessToken = options.accessToken;
         this.passwordSecret = options.passwordSecret;
         this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware");
+        this.pending = new Map();
     }
     static createRandomPassword(email) {
         return sha2_1.SHA256(email);
@@ -28,6 +29,23 @@ class JWTAuthMiddleware {
     }
     static getHashedToken(jwtToken) {
         return sha2_1.SHA256(jwtToken);
+    }
+    async authAvoidParallel(req) {
+        const jwtToken = await this.getToken(req);
+        if (!this.pending.has(jwtToken)) {
+            this.logger("New auth request ");
+            this.pending.set(jwtToken, this.auth(req));
+        }
+        else {
+            this.logger("use existing request");
+        }
+        const pendingRequest = this.pending.get(jwtToken);
+        pendingRequest
+            .catch(() => this.pending.delete(jwtToken))
+            .then(() => this.pending.delete(jwtToken));
+        const { user, token } = await pendingRequest;
+        req.user = user;
+        req.accessToken = token;
     }
     async auth(req) {
         const jwtToken = await this.getToken(req);
@@ -67,8 +85,10 @@ class JWTAuthMiddleware {
         this.logger("Roles: ", await this.role.find({}));
         this.logger("users: ", await this.user.find({}));
         await this.user.updateAll({ id: user.id }, { jwtTokenHash: JWTAuthMiddleware.getHashedToken(jwtToken) });
-        req.user = user;
-        req.accessToken = token;
+        return {
+            user,
+            token
+        };
     }
     async loginUser(user, password, jwtPayload) {
         let now = Math.round(Date.now().valueOf() / 1000);

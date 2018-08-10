@@ -42,7 +42,12 @@ export default class JWTAuthMiddleware {
     roleIdentifier: string;
     passwordSecret: string;
     logger: (...args: any[]) => void;
+    pending: Map<string, Promise<{
+        user: User;
+        token: Token;
+    }>>;
     constructor(options: JWTAuthMiddelwareOptions);
+    authAvoidParallel(req: any): Promise<void>;
     private auth;
     private loginUser;
     private getOrCreateUser;
