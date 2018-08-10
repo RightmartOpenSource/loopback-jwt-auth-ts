@@ -1,6 +1,7 @@
 interface User {
-    id: string;
+    id?: string;
     email: string;
+    password: string;
 }
 interface Token {
     id: string;
@@ -15,13 +16,13 @@ interface Model<T> {
     login(data: any): Promise<Token>;
 }
 interface JWTAuthMiddelwareOptions {
-    verify: (jwt: string) => Promise<boolean>;
+    verify: (jwt: string) => Promise<any>;
     getToken: (req: any) => Promise<string>;
-    beforeUserCreate: (email: string) => Promise<any>;
-    userModel: Model<any>;
-    roleModel: Model<any>;
-    roleMappingModel: Model<any>;
-    accessToken: Model<Token>;
+    beforeUserCreate: (newUser: User, jwtPayload: any) => Promise<any>;
+    userModel: Model<any> | any;
+    roleModel: Model<any> | any;
+    roleMappingModel: Model<any> | any;
+    accessToken: Model<Token> | any;
 }
 export default class JWTAuthMiddleware {
     private static createRandomPassword;
@@ -29,9 +30,9 @@ export default class JWTAuthMiddleware {
     roleMapping: Model<any>;
     user: Model<User>;
     accessToken: Model<Token>;
-    verify: (jwt: string) => Promise<boolean>;
+    verify: (jwt: string) => Promise<any>;
     getToken: (req: any) => Promise<string>;
-    beforeUserCreate: (email: string) => Promise<any>;
+    beforeUserCreate: (newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string;
     roleIdentifier: string;
     constructor(options: JWTAuthMiddelwareOptions);

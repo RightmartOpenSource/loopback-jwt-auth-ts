@@ -4,8 +4,9 @@ import * as uuid from "uuid/v4";
 import {saveUpsertWithWhere} from "./utils";
 
 interface User {
-    id: string,
+    id?: string,
     email: string
+    password: string
 }
 interface Token {
     id: string,
@@ -20,13 +21,13 @@ interface Model<T>{
     login(data: any): Promise<Token>
 }
 interface JWTAuthMiddelwareOptions{
-    verify: (jwt: string) => Promise<boolean>
+    verify: (jwt: string) => Promise<any>
     getToken: (req: any) => Promise<string>
-    beforeUserCreate: (email: string) => Promise<any>
-    userModel: Model<any>
-    roleModel: Model<any>
-    roleMappingModel: Model<any>
-    accessToken: Model<Token>;
+    beforeUserCreate: (newUser: User, jwtPayload: any) => Promise<any>
+    userModel: Model<any> | any
+    roleModel: Model<any> | any
+    roleMappingModel: Model<any> | any
+    accessToken: Model<Token> | any;
 }
 export default class JWTAuthMiddleware {
 
@@ -39,9 +40,9 @@ export default class JWTAuthMiddleware {
     roleMapping: Model<any>;
     user: Model<User>;
     accessToken: Model<Token>;
-    verify: (jwt: string) => Promise<boolean>;
+    verify: (jwt: string) => Promise<any>;
     getToken: (req: any) => Promise<string>;
-    beforeUserCreate:(email: string) => Promise<any>;
+    beforeUserCreate:(newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string = "email";
     roleIdentifier: string = "roles";
 
@@ -60,11 +61,13 @@ export default class JWTAuthMiddleware {
 
         const jwtToken = await this.getToken(req);
 
-        const isValid = await this.verify(jwtToken);
+        try {
+            await this.verify(jwtToken);
 
-        if(!isValid){
+        }catch (e) {
             throw new Error("Invalid jwt");
         }
+
 
         const payload = jwt.getToken(jwtToken);
 
@@ -75,7 +78,7 @@ export default class JWTAuthMiddleware {
             throw new Error(`JWT invalid format ${this.emailIdentifier} 
             is required in payload but was ${JSON.stringify(payload)}`)
         }
-        const { user, password }= await this.getOrCreateUser(userEmail);
+        const { user, password }= await this.getOrCreateUser(userEmail, payload);
 
         if(userRoles){
             await this.ensureRolesExists(userRoles);
@@ -103,15 +106,15 @@ export default class JWTAuthMiddleware {
         return await this.accessToken.findById(token.id);
     }
 
-    private async getOrCreateUser(email): Promise<{user: User, password: string}>{
+    private async getOrCreateUser(email, jwtPayload: any): Promise<{user: User, password: string}>{
 
         const password = JWTAuthMiddleware.createRandomPassword();
         let newUser = {
             email,
             password
-        };
+        } as User;
 
-        newUser = Object.assign(newUser, await this.beforeUserCreate(email));
+        newUser = Object.assign(newUser, await this.beforeUserCreate(newUser, jwtPayload));
         const user = await saveUpsertWithWhere(this.user, {email}, newUser) as User;
         return {
             user,

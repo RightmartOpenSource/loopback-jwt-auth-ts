@@ -56,37 +56,42 @@ var JWTAuthMiddleware = /** @class */ (function () {
     };
     JWTAuthMiddleware.prototype.auth = function (req) {
         return __awaiter(this, void 0, void 0, function () {
-            var jwtToken, isValid, payload, userEmail, userRoles, _a, user, password, token;
+            var jwtToken, e_1, payload, userEmail, userRoles, _a, user, password, token;
             return __generator(this, function (_b) {
                 switch (_b.label) {
                     case 0: return [4 /*yield*/, this.getToken(req)];
                     case 1:
                         jwtToken = _b.sent();
-                        return [4 /*yield*/, this.verify(jwtToken)];
+                        _b.label = 2;
                     case 2:
-                        isValid = _b.sent();
-                        if (!isValid) {
-                            throw new Error("Invalid jwt");
-                        }
+                        _b.trys.push([2, 4, , 5]);
+                        return [4 /*yield*/, this.verify(jwtToken)];
+                    case 3:
+                        _b.sent();
+                        return [3 /*break*/, 5];
+                    case 4:
+                        e_1 = _b.sent();
+                        throw new Error("Invalid jwt");
+                    case 5:
                         payload = jwt.getToken(jwtToken);
                         userEmail = lodash.get(payload, this.emailIdentifier, null);
                         userRoles = lodash.get(payload, this.roleIdentifier, null);
                         if (!userEmail) {
                             throw new Error("JWT invalid format " + this.emailIdentifier + " \n            is required in payload but was " + JSON.stringify(payload));
                         }
-                        return [4 /*yield*/, this.getOrCreateUser(userEmail)];
-                    case 3:
+                        return [4 /*yield*/, this.getOrCreateUser(userEmail, payload)];
+                    case 6:
                         _a = _b.sent(), user = _a.user, password = _a.password;
-                        if (!userRoles) return [3 /*break*/, 6];
+                        if (!userRoles) return [3 /*break*/, 9];
                         return [4 /*yield*/, this.ensureRolesExists(userRoles)];
-                    case 4:
+                    case 7:
                         _b.sent();
                         return [4 /*yield*/, this.updateRoleMapping(user, userRoles)];
-                    case 5:
+                    case 8:
                         _b.sent();
-                        _b.label = 6;
-                    case 6: return [4 /*yield*/, this.loginUser(user, password, payload)];
-                    case 7:
+                        _b.label = 9;
+                    case 9: return [4 /*yield*/, this.loginUser(user, password, payload)];
+                    case 10:
                         token = _b.sent();
                         req.user = user;
                         req.access_token = token;
@@ -119,7 +124,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
             });
         });
     };
-    JWTAuthMiddleware.prototype.getOrCreateUser = function (email) {
+    JWTAuthMiddleware.prototype.getOrCreateUser = function (email, jwtPayload) {
         return __awaiter(this, void 0, void 0, function () {
             var password, newUser, _a, _b, _c, user;
             return __generator(this, function (_d) {
@@ -132,7 +137,7 @@ var JWTAuthMiddleware = /** @class */ (function () {
                         };
                         _b = (_a = Object).assign;
                         _c = [newUser];
-                        return [4 /*yield*/, this.beforeUserCreate(email)];
+                        return [4 /*yield*/, this.beforeUserCreate(newUser, jwtPayload)];
                     case 1:
                         newUser = _b.apply(_a, _c.concat([_d.sent()]));
                         return [4 /*yield*/, utils_1.saveUpsertWithWhere(this.user, { email: email }, newUser)];
