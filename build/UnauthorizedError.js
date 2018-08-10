@@ -4,6 +4,7 @@ class UnauthorizedError extends Error {
     constructor() {
         super(...arguments);
         this.status = 401;
+        this.code = "credentials_required";
     }
 }
 exports.default = UnauthorizedError;
