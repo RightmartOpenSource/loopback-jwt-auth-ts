@@ -103,6 +103,10 @@ export default class JWTAuthMiddleware {
 
         this.logger("Got access token ", token);
 
+        this.logger("Role mappings: ", await this.roleMapping.find({}));
+        this.logger("Roles: ", await this.role.find({}));
+        this.logger("users: ", await this.user.find({}));
+
         req.user = user;
         req.accessToken = token;
 

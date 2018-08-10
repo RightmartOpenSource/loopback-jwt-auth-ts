@@ -58,22 +58,22 @@ var JWTAuthMiddleware = /** @class */ (function () {
     };
     JWTAuthMiddleware.prototype.auth = function (req) {
         return __awaiter(this, void 0, void 0, function () {
-            var jwtToken, e_1, payload, userEmail, userRoles, _a, user, password, token;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            var jwtToken, e_1, payload, userEmail, userRoles, _a, user, password, token, _b, _c, _d, _e, _f, _g;
+            return __generator(this, function (_h) {
+                switch (_h.label) {
                     case 0: return [4 /*yield*/, this.getToken(req)];
                     case 1:
-                        jwtToken = _b.sent();
+                        jwtToken = _h.sent();
                         this.logger("Got token from request", jwtToken);
-                        _b.label = 2;
+                        _h.label = 2;
                     case 2:
-                        _b.trys.push([2, 4, , 5]);
+                        _h.trys.push([2, 4, , 5]);
                         return [4 /*yield*/, this.verify(jwtToken)];
                     case 3:
-                        _b.sent();
+                        _h.sent();
                         return [3 /*break*/, 5];
                     case 4:
-                        e_1 = _b.sent();
+                        e_1 = _h.sent();
                         throw e_1;
                     case 5:
                         payload = jwt.decode(jwtToken);
@@ -86,23 +86,38 @@ var JWTAuthMiddleware = /** @class */ (function () {
                         }
                         return [4 /*yield*/, this.getOrCreateUser(userEmail, payload)];
                     case 6:
-                        _a = _b.sent(), user = _a.user, password = _a.password;
+                        _a = _h.sent(), user = _a.user, password = _a.password;
                         this.logger("Created or updated User", user);
                         if (!userRoles) return [3 /*break*/, 9];
                         this.logger("Updated roles ", userRoles);
                         return [4 /*yield*/, this.ensureRolesExists(userRoles)];
                     case 7:
-                        _b.sent();
+                        _h.sent();
                         return [4 /*yield*/, this.updateRoleMapping(user, userRoles)];
                     case 8:
-                        _b.sent();
-                        _b.label = 9;
+                        _h.sent();
+                        _h.label = 9;
                     case 9:
                         this.logger("Login and get Token");
                         return [4 /*yield*/, this.loginUser(user, password, payload)];
                     case 10:
-                        token = _b.sent();
+                        token = _h.sent();
                         this.logger("Got access token ", token);
+                        _b = this.logger;
+                        _c = ["Role mappings: "];
+                        return [4 /*yield*/, this.roleMapping.find({})];
+                    case 11:
+                        _b.apply(this, _c.concat([_h.sent()]));
+                        _d = this.logger;
+                        _e = ["Roles: "];
+                        return [4 /*yield*/, this.role.find({})];
+                    case 12:
+                        _d.apply(this, _e.concat([_h.sent()]));
+                        _f = this.logger;
+                        _g = ["users: "];
+                        return [4 /*yield*/, this.user.find({})];
+                    case 13:
+                        _f.apply(this, _g.concat([_h.sent()]));
                         req.user = user;
                         req.accessToken = token;
                         return [2 /*return*/];
