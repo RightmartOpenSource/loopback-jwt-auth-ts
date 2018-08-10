@@ -136,7 +136,7 @@ class JWTAuthMiddleware {
         }));
     }
     process(req, res, next) {
-        this.auth(req)
+        this.authAvoidParallel(req)
             .then(() => next())
             .catch(next);
     }
