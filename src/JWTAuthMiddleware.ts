@@ -40,6 +40,9 @@ interface JWTAuthMiddelwareOptions{
     passwordSecret: string;
 }
 export default class JWTAuthMiddleware {
+    public static getHashedToken(jwtToken: string) {
+        return SHA256(jwtToken).toString("hex");
+    }
 
     private static createRandomPassword(email){
         return SHA256(email);
@@ -47,13 +50,8 @@ export default class JWTAuthMiddleware {
 
     private static hasTokenChanged(jwtToken: string, user: User){
 
-        return  SHA256(jwtToken)!= user.jwtTokenHash
+        return  SHA256(jwtToken) != user.jwtTokenHash
     }
-
-    private static getHashedToken(jwtToken: string){
-        return SHA256(jwtToken)
-    }
-
 
     role: Model<any>;
     roleMapping: Model<any>;

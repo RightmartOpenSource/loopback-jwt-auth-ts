@@ -21,14 +21,14 @@ class JWTAuthMiddleware {
         this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware");
         this.pending = new Map();
     }
+    static getHashedToken(jwtToken) {
+        return sha2_1.SHA256(jwtToken).toString("hex");
+    }
     static createRandomPassword(email) {
         return sha2_1.SHA256(email);
     }
     static hasTokenChanged(jwtToken, user) {
         return sha2_1.SHA256(jwtToken) != user.jwtTokenHash;
-    }
-    static getHashedToken(jwtToken) {
-        return sha2_1.SHA256(jwtToken);
     }
     async authAvoidParallel(req) {
         const jwtToken = await this.getToken(req);

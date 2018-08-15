@@ -28,9 +28,9 @@ interface JWTAuthMiddelwareOptions {
     passwordSecret: string;
 }
 export default class JWTAuthMiddleware {
+    static getHashedToken(jwtToken: string): any;
     private static createRandomPassword;
     private static hasTokenChanged;
-    private static getHashedToken;
     role: Model<any>;
     roleMapping: Model<any>;
     user: Model<User>;
