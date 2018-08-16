@@ -116,6 +116,8 @@ export default class JWTAuthMiddleware {
             await this.verify(jwtToken);
 
         }catch (e) {
+            e.status = 401;
+            e.code = "credentials_required";
             throw e;
         }
 
