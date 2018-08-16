@@ -28,7 +28,7 @@ interface JWTAuthMiddelwareOptions {
     passwordSecret: string;
 }
 export default class JWTAuthMiddleware {
-    private static createRandomPassword;
+    private static readonly STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
     private static hasTokenChanged;
     private static getHashedToken;
     role: Model<any>;
@@ -47,6 +47,7 @@ export default class JWTAuthMiddleware {
         token: Token;
     }>>;
     constructor(options: JWTAuthMiddelwareOptions);
+    deleteAfterExpired(jwtToken: string): Promise<void>;
     authAvoidParallel(req: any): Promise<void>;
     private auth;
     private loginUser;

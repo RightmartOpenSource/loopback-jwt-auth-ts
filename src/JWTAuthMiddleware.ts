@@ -41,9 +41,7 @@ interface JWTAuthMiddelwareOptions{
 }
 export default class JWTAuthMiddleware {
 
-    private static createRandomPassword(email){
-        return SHA256(email);
-    }
+    private static readonly STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS = 1000;
 
     private static hasTokenChanged(jwtToken: string, user: User){
 
@@ -83,6 +81,13 @@ export default class JWTAuthMiddleware {
         this.pending = new Map();
     }
 
+    async deleteAfterExpired(jwtToken: string){
+        const jwtPayload = jwt.decode(jwtToken);
+        let now = Date.now().valueOf() - JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
+        const delta = jwtPayload.exp - now;
+        setTimeout(()=> this.pending.delete(jwtToken), delta)
+    }
+
     async authAvoidParallel(req){
         const jwtToken = await this.getToken(req);
         if(!this.pending.has(jwtToken)){
@@ -94,7 +99,7 @@ export default class JWTAuthMiddleware {
         const pendingRequest = this.pending.get(jwtToken);
         pendingRequest
             .catch(()=> this.pending.delete(jwtToken))
-            .then(()=> this.pending.delete(jwtToken));
+            .then(()=> this.deleteAfterExpired(jwtToken));
         const {user, token} = await pendingRequest;
         req.user = user;
         req.accessToken = token;

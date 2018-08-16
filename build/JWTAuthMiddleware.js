@@ -21,14 +21,17 @@ class JWTAuthMiddleware {
         this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware");
         this.pending = new Map();
     }
-    static createRandomPassword(email) {
-        return sha2_1.SHA256(email);
-    }
     static hasTokenChanged(jwtToken, user) {
         return sha2_1.SHA256(jwtToken) != user.jwtTokenHash;
     }
     static getHashedToken(jwtToken) {
         return sha2_1.SHA256(jwtToken);
+    }
+    async deleteAfterExpired(jwtToken) {
+        const jwtPayload = jwt.decode(jwtToken);
+        let now = Date.now().valueOf() - JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
+        const delta = jwtPayload.exp - now;
+        setTimeout(() => this.pending.delete(jwtToken), delta);
     }
     async authAvoidParallel(req) {
         const jwtToken = await this.getToken(req);
@@ -42,7 +45,7 @@ class JWTAuthMiddleware {
         const pendingRequest = this.pending.get(jwtToken);
         pendingRequest
             .catch(() => this.pending.delete(jwtToken))
-            .then(() => this.pending.delete(jwtToken));
+            .then(() => this.deleteAfterExpired(jwtToken));
         const { user, token } = await pendingRequest;
         req.user = user;
         req.accessToken = token;
@@ -141,5 +144,6 @@ class JWTAuthMiddleware {
             .catch(next);
     }
 }
+JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS = 1000;
 exports.default = JWTAuthMiddleware;
 //# sourceMappingURL=JWTAuthMiddleware.js.map
