@@ -40,18 +40,16 @@ interface JWTAuthMiddelwareOptions{
     passwordSecret: string;
 }
 export default class JWTAuthMiddleware {
+    public static getHashedToken(jwtToken: string) {
+        return SHA256(jwtToken).toString("hex");
+    }
 
     private static readonly STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS = 1000;
 
     private static hasTokenChanged(jwtToken: string, user: User){
 
-        return  SHA256(jwtToken)!= user.jwtTokenHash
+        return  SHA256(jwtToken) != user.jwtTokenHash
     }
-
-    private static getHashedToken(jwtToken: string){
-        return SHA256(jwtToken)
-    }
-
 
     role: Model<any>;
     roleMapping: Model<any>;
