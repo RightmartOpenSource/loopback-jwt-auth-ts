@@ -28,9 +28,9 @@ interface JWTAuthMiddelwareOptions {
     passwordSecret: string;
 }
 export default class JWTAuthMiddleware {
+    static getHashedToken(jwtToken: string): any;
     private static readonly STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
     private static hasTokenChanged;
-    private static getHashedToken;
     role: Model<any>;
     roleMapping: Model<any>;
     user: Model<User>;

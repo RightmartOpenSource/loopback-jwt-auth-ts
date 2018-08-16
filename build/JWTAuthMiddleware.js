@@ -21,11 +21,11 @@ class JWTAuthMiddleware {
         this.logger = options.logger ? options.logger : debug("loopback-jwt-auth-ts:JWTAuthMiddleware");
         this.pending = new Map();
     }
+    static getHashedToken(jwtToken) {
+        return sha2_1.SHA256(jwtToken).toString("hex");
+    }
     static hasTokenChanged(jwtToken, user) {
         return sha2_1.SHA256(jwtToken) != user.jwtTokenHash;
-    }
-    static getHashedToken(jwtToken) {
-        return sha2_1.SHA256(jwtToken);
     }
     async deleteAfterExpired(jwtToken) {
         const jwtPayload = jwt.decode(jwtToken);
