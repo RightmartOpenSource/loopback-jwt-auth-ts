@@ -79,31 +79,29 @@ export default class JWTAuthMiddleware {
         this.pending = new Map();
     }
 
-    async deleteAfterExpired(jwtToken: string){
-        const jwtPayload = jwt.decode(jwtToken);
-        let now = Date.now().valueOf() - JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
-        const delta = jwtPayload.exp - now;
-        setTimeout(()=> this.pending.delete(jwtToken), delta)
+    deleteAfterExpired(token, exp) {
+        const now = Date.now().valueOf() - JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
+        this.logger("token exp ", exp, now)
+        setTimeout(() => this.pending.delete(token), exp - now/1000);
     }
-
-    async authAvoidParallel(req){
+    async authAvoidParallel(req) {
+        let entry;
         const jwtToken = await this.getToken(req);
-        if(!this.pending.has(jwtToken)){
-            this.logger("New auth request ");
-            this.pending.set(jwtToken, this.auth(req));
-        }else {
-            this.logger("use existing request")
+        if (!this.pending.has(jwtToken)) {
+            this.logger("New auth request ", jwtToken);
+            const promise = this.auth(req);
+            this.pending.set(jwtToken, promise);
+            entry = await promise;
         }
-        const pendingRequest = this.pending.get(jwtToken);
-        pendingRequest
-            .catch(()=> this.pending.delete(jwtToken))
-            .then(()=> this.deleteAfterExpired(jwtToken));
-        const {user, token} = await pendingRequest;
-        req.user = user;
-        req.accessToken = token;
+        else {
+            this.logger("use existing request");
+            entry = await this.pending.get(jwtToken);
+        }
+        req.user = entry.user;
+        req.accessToken = entry.token;
     }
 
-    private async auth(req): Promise<{user: User, token: Token}>{
+    private async auth(req): Promise<{user: User, token: Token, exp: Number}>{
 
         const jwtToken = await this.getToken(req);
 
@@ -116,8 +114,6 @@ export default class JWTAuthMiddleware {
             await this.verify(jwtToken);
 
         }catch (e) {
-            e.status = 401;
-            e.code = "credentials_required";
             throw e;
         }
 
@@ -158,9 +154,12 @@ export default class JWTAuthMiddleware {
         // save hash of token to skip role update next time
         await this.user.updateAll({id: user.id}, {jwtTokenHash: JWTAuthMiddleware.getHashedToken(jwtToken)});
 
+        this.deleteAfterExpired(jwtToken, payload.exp);
+
         return {
             user,
-            token
+            token,
+            exp: payload.exp,
         };
 
     }
@@ -223,8 +222,8 @@ export default class JWTAuthMiddleware {
     public process(req, res, next: (err? : Error) => any) {
 
         this.authAvoidParallel(req)
-        .then(() => next())
-        .catch(next)
+            .then(() => next())
+            .catch(next)
 
     }
 

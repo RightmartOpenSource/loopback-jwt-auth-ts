@@ -47,7 +47,7 @@ export default class JWTAuthMiddleware {
         token: Token;
     }>>;
     constructor(options: JWTAuthMiddelwareOptions);
-    deleteAfterExpired(jwtToken: string): Promise<void>;
+    deleteAfterExpired(token: any, exp: any): void;
     authAvoidParallel(req: any): Promise<void>;
     private auth;
     private loginUser;

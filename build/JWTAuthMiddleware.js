@@ -27,28 +27,26 @@ class JWTAuthMiddleware {
     static hasTokenChanged(jwtToken, user) {
         return sha2_1.SHA256(jwtToken) != user.jwtTokenHash;
     }
-    async deleteAfterExpired(jwtToken) {
-        const jwtPayload = jwt.decode(jwtToken);
-        let now = Date.now().valueOf() - JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
-        const delta = jwtPayload.exp - now;
-        setTimeout(() => this.pending.delete(jwtToken), delta);
+    deleteAfterExpired(token, exp) {
+        const now = Date.now().valueOf() - JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
+        this.logger("token exp ", exp, now);
+        setTimeout(() => this.pending.delete(token), exp - now / 1000);
     }
     async authAvoidParallel(req) {
+        let entry;
         const jwtToken = await this.getToken(req);
         if (!this.pending.has(jwtToken)) {
-            this.logger("New auth request ");
-            this.pending.set(jwtToken, this.auth(req));
+            this.logger("New auth request ", jwtToken);
+            const promise = this.auth(req);
+            this.pending.set(jwtToken, promise);
+            entry = await promise;
         }
         else {
             this.logger("use existing request");
+            entry = await this.pending.get(jwtToken);
         }
-        const pendingRequest = this.pending.get(jwtToken);
-        pendingRequest
-            .catch(() => this.pending.delete(jwtToken))
-            .then(() => this.deleteAfterExpired(jwtToken));
-        const { user, token } = await pendingRequest;
-        req.user = user;
-        req.accessToken = token;
+        req.user = entry.user;
+        req.accessToken = entry.token;
     }
     async auth(req) {
         const jwtToken = await this.getToken(req);
@@ -60,8 +58,6 @@ class JWTAuthMiddleware {
             await this.verify(jwtToken);
         }
         catch (e) {
-            e.status = 401;
-            e.code = "credentials_required";
             throw e;
         }
         const payload = jwt.decode(jwtToken);
@@ -90,9 +86,11 @@ class JWTAuthMiddleware {
         this.logger("Roles: ", await this.role.find({}));
         this.logger("users: ", await this.user.find({}));
         await this.user.updateAll({ id: user.id }, { jwtTokenHash: JWTAuthMiddleware.getHashedToken(jwtToken) });
+        this.deleteAfterExpired(jwtToken, payload.exp);
         return {
             user,
-            token
+            token,
+            exp: payload.exp,
         };
     }
     async loginUser(user, password, jwtPayload) {
