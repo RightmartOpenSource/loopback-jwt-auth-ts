@@ -59,7 +59,7 @@ export default class JWTAuthMiddleware {
     getToken: (req: any) => Promise<string>;
     beforeUserCreate:(newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string = "email";
-    internalIdentifier: string = "internalId";
+    idIdentifier: string = "internalId";
     roleIdentifier: string = "roles";
     passwordSecret: string;
     logger: (...args)=> void;
@@ -122,7 +122,7 @@ export default class JWTAuthMiddleware {
 
         this.logger("Token is valid and got payload ", payload);
 
-        const userId = lodash.get(payload, this.internalIdentifier, null) as string;
+        const userId = lodash.get(payload, this.idIdentifier, null) as string;
         const userEmail = lodash.get(payload, this.emailIdentifier, null) as string;
         const userRoles = lodash.get(payload, this.roleIdentifier, null) as string[];
 
