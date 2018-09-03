@@ -39,6 +39,7 @@ export default class JWTAuthMiddleware {
     getToken: (req: any) => Promise<string>;
     beforeUserCreate: (newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string;
+    internalIdentifier: string;
     roleIdentifier: string;
     passwordSecret: string;
     logger: (...args: any[]) => void;
