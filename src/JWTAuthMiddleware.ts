@@ -59,6 +59,7 @@ export default class JWTAuthMiddleware {
     getToken: (req: any) => Promise<string>;
     beforeUserCreate:(newUser: User, jwtPayload: any) => Promise<any>;
     emailIdentifier: string = "email";
+    internalIdentifier: string = "internalId";
     roleIdentifier: string = "roles";
     passwordSecret: string;
     logger: (...args)=> void;
@@ -121,16 +122,17 @@ export default class JWTAuthMiddleware {
 
         this.logger("Token is valid and got payload ", payload);
 
+        const userId = lodash.get(payload, this.internalIdentifier, null) as string;
         const userEmail = lodash.get(payload, this.emailIdentifier, null) as string;
         const userRoles = lodash.get(payload, this.roleIdentifier, null) as string[];
 
-        this.logger("Email and roles are: ", userEmail, userRoles);
+        this.logger("Email and roles are: ", userId, userEmail, userRoles);
 
-        if(!userEmail){
+        if(!userId){
             throw new Error(`JWT invalid format ${this.emailIdentifier} 
             is required in payload but was ${JSON.stringify(payload)}`)
         }
-        const { user, password }= await this.getOrCreateUser(userEmail, payload);
+        const { user, password }= await this.getOrCreateUser(userId, userEmail, payload);
 
         this.logger("Created or updated User", user);
 
@@ -179,7 +181,7 @@ export default class JWTAuthMiddleware {
         return await this.accessToken.findById(token.id);
     }
 
-    private async getOrCreateUser(email, jwtPayload: any): Promise<{user: User, password: string}>{
+    private async getOrCreateUser(userId, email, jwtPayload: any): Promise<{user: User, password: string}>{
 
         const password = this.passwordSecret;
         let newUser = {
@@ -188,7 +190,7 @@ export default class JWTAuthMiddleware {
         } as User;
 
         newUser = Object.assign(newUser, await this.beforeUserCreate(newUser, jwtPayload));
-        const user = await saveUpsertWithWhere(this.user, {email}, newUser) as User;
+        const user = await saveUpsertWithWhere(this.user, { id: userId }, newUser) as User;
         return {
             user,
             password,
