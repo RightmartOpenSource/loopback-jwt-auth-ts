@@ -189,8 +189,13 @@ export default class JWTAuthMiddleware {
             password
         } as User;
 
+        let where: any = { email }
+        if (userId) {
+            where = { id: userId };
+        }
+
         newUser = Object.assign(newUser, await this.beforeUserCreate(newUser, jwtPayload));
-        const user = await saveUpsertWithWhere(this.user, { id: userId }, newUser) as User;
+        const user = await saveUpsertWithWhere(this.user, where, newUser) as User;
         return {
             user,
             password,
