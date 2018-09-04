@@ -9,7 +9,7 @@ const sha2_1 = require("sha2");
 class JWTAuthMiddleware {
     constructor(options) {
         this.emailIdentifier = "email";
-        this.internalIdentifier = "internalId";
+        this.idIdentifier = "internalId";
         this.roleIdentifier = "roles";
         this.beforeUserCreate = options.beforeUserCreate;
         this.verify = options.verify;
@@ -63,7 +63,7 @@ class JWTAuthMiddleware {
         }
         const payload = jwt.decode(jwtToken);
         this.logger("Token is valid and got payload ", payload);
-        const userId = lodash.get(payload, this.internalIdentifier, null);
+        const userId = lodash.get(payload, this.idIdentifier, null);
         const userEmail = lodash.get(payload, this.emailIdentifier, null);
         const userRoles = lodash.get(payload, this.roleIdentifier, null);
         this.logger("Email and roles are: ", userId, userEmail, userRoles);
@@ -112,8 +112,12 @@ class JWTAuthMiddleware {
             email,
             password
         };
+        let where = { email };
+        if (userId) {
+            where = { id: userId };
+        }
         newUser = Object.assign(newUser, await this.beforeUserCreate(newUser, jwtPayload));
-        const user = await utils_1.saveUpsertWithWhere(this.user, { id: userId }, newUser);
+        const user = await utils_1.saveUpsertWithWhere(this.user, where, newUser);
         return {
             user,
             password,
