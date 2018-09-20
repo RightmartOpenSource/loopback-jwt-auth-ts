@@ -126,11 +126,12 @@ export default class JWTAuthMiddleware {
 
         this.logger("Email and roles are: ", userEmail, userRoles);
 
-        if(!userEmail){
-            throw new Error(`JWT invalid format ${this.emailIdentifier} 
-            is required in payload but was ${JSON.stringify(payload)}`)
-        }
         const { user, password }= await this.getOrCreateUser(userEmail, payload);
+
+        if(!user.email){
+            throw new Error(`User missing property email. But it
+            is required in the user, user was: ${JSON.stringify(user)}`)
+        }
 
         this.logger("Created or updated User", user);
 
