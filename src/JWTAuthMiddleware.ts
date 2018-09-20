@@ -1,6 +1,6 @@
 import * as jwt from "jsonwebtoken";
 import * as lodash from "lodash";
-import {saveUpsertWithWhere} from "./utils";
+import {saveUpsertWithWhere, uuid} from "./utils";
 import * as debug from "debug";
 import UnauthorizedError from "./UnauthorizedError";
 import {SHA256} from "sha2"
@@ -49,6 +49,18 @@ export default class JWTAuthMiddleware {
     private static hasTokenChanged(jwtToken: string, user: User){
 
         return  SHA256(jwtToken) != user.jwtTokenHash
+    }
+
+    private static createTempMailIfNecessary(newUser){
+        const email = lodash.get(newUser, "email", "") as string;
+        if(typeof email !== "string"){
+            throw new Error(`Email of the new user is invalid data type: 
+            ${JSON.stringify(newUser)} type was ${typeof email}`)
+        }
+        if(lodash.isEmpty(email.trim())){
+            newUser.email = `${uuid()}@automatic-generated-email.org`
+        }
+        return newUser
     }
 
     role: Model<any>;
@@ -189,6 +201,8 @@ export default class JWTAuthMiddleware {
         } as User;
 
         newUser = Object.assign(newUser, await this.beforeUserCreate(newUser, jwtPayload));
+
+        newUser = JWTAuthMiddleware.createTempMailIfNecessary(newUser);
         const user = await saveUpsertWithWhere(this.user, {email}, newUser) as User;
         return {
             user,
