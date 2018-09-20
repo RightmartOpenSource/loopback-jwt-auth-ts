@@ -9,6 +9,7 @@ const sha2_1 = require("sha2");
 class JWTAuthMiddleware {
     constructor(options) {
         this.emailIdentifier = "email";
+        this.idIdentifier = "internalId";
         this.roleIdentifier = "roles";
         this.beforeUserCreate = options.beforeUserCreate;
         this.verify = options.verify;
@@ -62,14 +63,15 @@ class JWTAuthMiddleware {
         }
         const payload = jwt.decode(jwtToken);
         this.logger("Token is valid and got payload ", payload);
+        const userId = lodash.get(payload, this.idIdentifier, null);
         const userEmail = lodash.get(payload, this.emailIdentifier, null);
         const userRoles = lodash.get(payload, this.roleIdentifier, null);
-        this.logger("Email and roles are: ", userEmail, userRoles);
-        if (!userEmail) {
+        this.logger("Email and roles are: ", userId, userEmail, userRoles);
+        if (!userId) {
             throw new Error(`JWT invalid format ${this.emailIdentifier} 
             is required in payload but was ${JSON.stringify(payload)}`);
         }
-        const { user, password } = await this.getOrCreateUser(userEmail, payload);
+        const { user, password } = await this.getOrCreateUser(userId, userEmail, payload);
         this.logger("Created or updated User", user);
         if (userRoles && JWTAuthMiddleware.hasTokenChanged(jwtToken, user)) {
             this.logger("Updated roles ", userRoles);
@@ -104,14 +106,18 @@ class JWTAuthMiddleware {
         await this.accessToken.updateAll({ id: token.id }, { userId: user.id });
         return await this.accessToken.findById(token.id);
     }
-    async getOrCreateUser(email, jwtPayload) {
+    async getOrCreateUser(userId, email, jwtPayload) {
         const password = this.passwordSecret;
         let newUser = {
             email,
             password
         };
+        let where = { email };
+        if (userId) {
+            where = { id: userId };
+        }
         newUser = Object.assign(newUser, await this.beforeUserCreate(newUser, jwtPayload));
-        const user = await utils_1.saveUpsertWithWhere(this.user, { email }, newUser);
+        const user = await utils_1.saveUpsertWithWhere(this.user, where, newUser);
         return {
             user,
             password,

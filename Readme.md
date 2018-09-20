@@ -24,6 +24,9 @@ const auth = new JWTAuthMiddleware({
 
 ```
 
+Before creating a new user or updating an existing one, the existence is determined by the
+information profided with the JWT tocken. The existence is checked with the email address or the
+internalId from the tocken. An internalId is prefered over an email address.
 
 ## Testing
 For this repository doesn't exist any test.
