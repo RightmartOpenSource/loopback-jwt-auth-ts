@@ -31,7 +31,7 @@ class JWTAuthMiddleware {
     deleteAfterExpired(token, exp) {
         const now = Date.now().valueOf() - JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
         this.logger("token exp ", exp, now);
-        setTimeout(() => this.pending.delete(token), exp - now / 1000);
+        setTimeout(() => this.pending.delete(token), exp * 1000 - now);
     }
     async authAvoidParallel(req) {
         let entry;

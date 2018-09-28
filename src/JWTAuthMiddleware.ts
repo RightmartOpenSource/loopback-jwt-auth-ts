@@ -1,6 +1,6 @@
 import * as jwt from "jsonwebtoken";
 import * as lodash from "lodash";
-import {saveUpsertWithWhere, uuid} from "./utils";
+import {saveUpsertWithWhere} from "./utils";
 import * as debug from "debug";
 import UnauthorizedError from "./UnauthorizedError";
 import {SHA256} from "sha2"
@@ -83,7 +83,7 @@ export default class JWTAuthMiddleware {
     deleteAfterExpired(token, exp) {
         const now = Date.now().valueOf() - JWTAuthMiddleware.STATIC_DELTA_FOR_REQUEST_PROCESSING_TIME_IN_MS;
         this.logger("token exp ", exp, now)
-        setTimeout(() => this.pending.delete(token), exp - now/1000);
+        setTimeout(() => this.pending.delete(token), exp * 1000 - now);
     }
     async authAvoidParallel(req) {
         let entry;
