@@ -51,6 +51,7 @@ export default class JWTAuthMiddleware {
     deleteAfterExpired(token: any, exp: any): void;
     authAvoidParallel(req: any): Promise<void>;
     private auth;
+    private tryReadEmailFromRequest;
     private loginUser;
     private getOrCreateUser;
     private updateRoleMapping;

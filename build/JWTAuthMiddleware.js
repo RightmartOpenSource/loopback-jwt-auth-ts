@@ -64,7 +64,10 @@ class JWTAuthMiddleware {
         const payload = jwt.decode(jwtToken);
         this.logger("Token is valid and got payload ", payload);
         const userId = lodash.get(payload, this.idIdentifier, null);
-        const userEmail = lodash.get(payload, this.emailIdentifier, null);
+        let userEmail = lodash.get(payload, this.emailIdentifier, null);
+        if (!userEmail) {
+            userEmail = this.tryReadEmailFromRequest(req);
+        }
         const userRoles = lodash.get(payload, this.roleIdentifier, null);
         this.logger("Email and roles are: ", userId, userEmail, userRoles);
         if (!userId) {
@@ -94,6 +97,12 @@ class JWTAuthMiddleware {
             token,
             exp: payload.exp,
         };
+    }
+    tryReadEmailFromRequest(req) {
+        if (req._body && req.body.email) {
+            return req.body.email;
+        }
+        return null;
     }
     async loginUser(user, password, jwtPayload) {
         let now = Math.round(Date.now().valueOf() / 1000);
