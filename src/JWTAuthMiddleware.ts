@@ -123,7 +123,10 @@ export default class JWTAuthMiddleware {
         this.logger("Token is valid and got payload ", payload);
 
         const userId = lodash.get(payload, this.idIdentifier, null) as string;
-        const userEmail = lodash.get(payload, this.emailIdentifier, null) as string;
+        let userEmail = lodash.get(payload, this.emailIdentifier, null) as string;
+        if (!userEmail) {
+            userEmail = this.tryReadEmailFromRequest(req);
+        }
         const userRoles = lodash.get(payload, this.roleIdentifier, null) as string[];
 
         this.logger("Email and roles are: ", userId, userEmail, userRoles);
@@ -132,6 +135,7 @@ export default class JWTAuthMiddleware {
             throw new Error(`JWT invalid format ${this.emailIdentifier} 
             is required in payload but was ${JSON.stringify(payload)}`)
         }
+
         const { user, password }= await this.getOrCreateUser(userId, userEmail, payload);
 
         this.logger("Created or updated User", user);
@@ -166,7 +170,13 @@ export default class JWTAuthMiddleware {
 
     }
 
+    private tryReadEmailFromRequest(req: any) : string {
+        if (req._body && req.body.email) {
+            return req.body.email;
+        }
 
+        return null;
+    }
 
     private async loginUser(user: User, password: string, jwtPayload: any): Promise<Token>{
         let now = Math.round(Date.now().valueOf()/1000);
